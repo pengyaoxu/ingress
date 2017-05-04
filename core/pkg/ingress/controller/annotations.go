@@ -75,7 +75,7 @@ func newAnnotationExtractor(cfg extractorConfig) annotationExtractor {
 		},
 	}
 }
-
+//提出ingress的内容
 func (e *annotationExtractor) Extract(ing *extensions.Ingress) map[string]interface{} {
 	anns := make(map[string]interface{}, 0)
 	for name, annotationParser := range e.annotations {

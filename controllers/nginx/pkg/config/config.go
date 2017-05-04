@@ -257,6 +257,7 @@ type Configuration struct {
 }
 
 // NewDefault returns the default nginx configuration
+// 填充了部分默认选项的nginx配置文件
 func NewDefault() Configuration {
 	cfg := Configuration{
 		ClientHeaderBufferSize:  "1k",

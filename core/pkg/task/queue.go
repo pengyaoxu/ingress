@@ -107,6 +107,7 @@ func (t *Queue) IsShuttingDown() bool {
 
 // NewTaskQueue creates a new task queue with the given sync function.
 // The sync function is called for every element inserted into the queue.
+// 使用所给的sync方法创建一个事务队列，sync方法在每次元素插入时被调用
 func NewTaskQueue(syncFn func(interface{}) error) *Queue {
 	return NewCustomTaskQueue(syncFn, nil)
 }

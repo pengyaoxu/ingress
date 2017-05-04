@@ -87,7 +87,7 @@ Error loading new template : %v
 			return
 		}
 
-		n.t.Close()
+		n.t.Close()          // 关闭filewatcher
 		n.t = template
 		glog.Info("new NGINX template loaded")
 	}
@@ -180,6 +180,7 @@ func (n *NGINXController) start(cmd *exec.Cmd, done chan error) {
 
 // Reload checks if the running configuration file is different
 // to the specified and reload nginx if required
+// 重载nginx配置
 func (n NGINXController) Reload(data []byte) ([]byte, bool, error) {
 	if !n.isReloadRequired(data) {
 		return []byte("Reload not required"), false, nil
@@ -324,6 +325,7 @@ func (n *NGINXController) SetListers(lister ingress.StoreLister) {
 // write the custom template (the complexity depends on the implementation)
 // write the configuration file
 // returning nill implies the backend will be reloaded.
+// 返回nill意味着nginx后端将被重载
 // if an error is returned means requeue the update
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) ([]byte, error) {
 	var longestName int

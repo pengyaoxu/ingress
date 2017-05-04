@@ -78,6 +78,7 @@ func (t *Template) Close() {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
+// 实现了将ingress渲染到nginx配置文件的过程
 func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	defer t.tmplBuf.Reset()
 	defer t.outCmdBuf.Reset()
@@ -98,7 +99,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 		}
 		glog.Infof("NGINX configuration: %v", string(b))
 	}
-
+	// conf内容与模板结合，结果返回到tmpBuf中
 	err := t.tmpl.Execute(t.tmplBuf, conf)
 	if err != nil {
 		return nil, err
@@ -106,6 +107,7 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 
 	// squeezes multiple adjacent empty lines to be single
 	// spaced this is to avoid the use of regular expressions
+	// 合并多个空行
 	cmd := exec.Command("/ingress-controller/clean-nginx-conf.sh")
 	cmd.Stdin = t.tmplBuf
 	cmd.Stdout = t.outCmdBuf

@@ -98,7 +98,7 @@ func (c *threadSafeMap) Get(key string) (item interface{}, exists bool) {
 
 func (c *threadSafeMap) List() []interface{} {
 	c.lock.RLock()
-	defer c.lock.RUnlock()
+	defer c.lock.RUnlock()    // 释放锁
 	list := make([]interface{}, 0, len(c.items))
 	for _, item := range c.items {
 		list = append(list, item)

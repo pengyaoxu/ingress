@@ -31,6 +31,7 @@ type IngressAnnotation interface {
 
 type ingAnnotations map[string]string
 
+// strconv：将bool值转化为true或false
 func (a ingAnnotations) parseBool(name string) (bool, error) {
 	val, ok := a[name]
 	if ok {

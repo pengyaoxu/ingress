@@ -59,6 +59,7 @@ type decoder struct {
 // NewDecoder creates a streaming decoder that reads object chunks from r and decodes them with d.
 // The reader is expected to return ErrShortRead if the provided buffer is not large enough to read
 // an entire object.
+// 解码器
 func NewDecoder(r io.ReadCloser, d runtime.Decoder) Decoder {
 	return &decoder{
 		reader:   r,

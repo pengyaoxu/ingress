@@ -528,6 +528,7 @@ type ThirdPartyResourceDataList struct {
 // endpoints defined by a backend. An Ingress can be configured to give services
 // externally-reachable urls, load balance traffic, terminate SSL, offer name
 // based virtual hosting etc.
+// 是一个准入规则的集合
 type Ingress struct {
 	unversioned.TypeMeta `json:",inline"`
 	// Standard object's metadata.
@@ -580,6 +581,9 @@ type IngressSpec struct {
 	// +optional
 	Rules []IngressRule `json:"rules,omitempty"`
 	// TODO: Add the ability to specify load-balancer IP through claims
+	// xupy
+	// add selector for ingress rules select the controller
+	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
 }
 
 // IngressTLS describes the transport layer security associated with an Ingress.

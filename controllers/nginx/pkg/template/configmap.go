@@ -34,6 +34,7 @@ const (
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
+// 读取用户定义的完整配置
 func ReadConfig(src map[string]string) config.Configuration {
 	conf := map[string]string{}
 	if src != nil {

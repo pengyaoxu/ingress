@@ -3,6 +3,7 @@ package defaults
 import "net"
 
 // Backend defines the mandatory configuration that an Ingress controller must provide
+// 定义了一个ingress controller需要提供的配置
 // The reason of this requirements is the annotations are generic. If some implementation do not supports
 // one or more annotations it just can provides defaults
 type Backend struct {

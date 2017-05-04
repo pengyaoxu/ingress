@@ -146,6 +146,7 @@ type Configuration struct {
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
+// 描述了与service相关的一个或多个远程endpoints
 type Backend struct {
 	// Name represents an unique api.Service name formatted as <namespace>-<name>-<port>
 	Name string `json:"name"`
@@ -197,7 +198,7 @@ type Endpoint struct {
 
 // Server describes a website
 type Server struct {
-	// Hostname returns the FQDN of the server
+	// Hostname returns the FQDN of the server     FQDN:完全域名
 	Hostname string `json:"hostname"`
 	// SSLPassthrough indicates if the TLS termination is realized in
 	// the server or in the remote endpoint

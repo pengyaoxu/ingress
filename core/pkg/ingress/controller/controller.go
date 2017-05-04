@@ -169,7 +169,8 @@ func newIngressController(config *Configuration) *GenericController {
 				return
 			}
 			ic.recorder.Eventf(addIng, api.EventTypeNormal, "CREATE", fmt.Sprintf("Ingress %s/%s", addIng.Namespace, addIng.Name))
-			ic.syncQueue.Enqueue(obj)
+			ic.syncQueue.Enqueue(obj)   // 加入队列
+			// 如果包含证书，认证成功后加入证书队列
 			if ic.annotations.ContainsCertificateAuth(addIng) {
 				s, err := ic.annotations.CertificateAuthSecret(addIng)
 				if err == nil {
@@ -393,13 +394,14 @@ func (ic *GenericController) getConfigMap(ns, name string) (*api.ConfigMap, erro
 // sync collects all the pieces required to assemble the configuration file and
 // then sends the content to the backend (OnUpdate) receiving the populated
 // template as response reloading the backend if is required.
+// 用于规整所有配置文件所需要的项，然后将这些内容发送至后端进行OnUpdate
 func (ic *GenericController) sync(key interface{}) error {
 	ic.syncRateLimiter.Accept()
 
 	if ic.syncQueue.IsShuttingDown() {
 		return nil
 	}
-
+	// 如果有controller没有进行sync
 	if !ic.controllersInSync() {
 		time.Sleep(podStoreSyncedPollPeriod)
 		return fmt.Errorf("deferring sync till endpoints controller has synced")
@@ -434,7 +436,7 @@ func (ic *GenericController) sync(key interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	// 重新加载配置
 	out, reloaded, err := ic.cfg.Backend.Reload(data)
 	if err != nil {
 		incReloadErrorCount()
@@ -557,6 +559,7 @@ func (ic *GenericController) getStreamServices(configmapName string, proto api.P
 // getDefaultUpstream returns an upstream associated with the
 // default backend service. In case of error retrieving information
 // configure the upstream to return http code 503.
+// 与默认后端service联系的默认upstream，如果获取默认后端错误将返回503
 func (ic *GenericController) getDefaultUpstream() *ingress.Backend {
 	upstream := &ingress.Backend{
 		Name: defUpstreamName,
@@ -598,6 +601,7 @@ func (c ingressByRevision) Less(i, j int) bool {
 
 // getBackendServers returns a list of Upstream and Server to be used by the backend
 // An upstream can be used in multiple servers if the namespace, service name and port are the same
+// 获取所有ingress
 func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress.Server) {
 	ings := ic.ingLister.Store.List()
 	sort.Sort(ingressByRevision(ings))
@@ -611,7 +615,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 		if !class.IsValid(ing, ic.cfg.IngressClass, ic.cfg.DefaultIngressClass) {
 			continue
 		}
-
+		// 提取ingress里面的注解
 		anns := ic.annotations.Extract(ing)
 
 		for _, rule := range ing.Spec.Rules {
@@ -682,6 +686,7 @@ func (ic *GenericController) getBackendServers() ([]*ingress.Backend, []*ingress
 	// if the content does not change.
 	aUpstreams := make([]*ingress.Backend, 0, len(upstreams))
 	for _, value := range upstreams {
+		// 添加默认后端
 		if len(value.Endpoints) == 0 {
 			glog.V(3).Infof("upstream %v does not have any active endpoints. Using default backend", value.Name)
 			value.Endpoints = append(value.Endpoints, newDefaultServer())
@@ -724,6 +729,8 @@ func (ic GenericController) GetAuthCertificate(secretName string) (*resolver.Aut
 
 // createUpstreams creates the NGINX upstreams for each service referenced in
 // Ingress rules. The servers inside the upstream are endpoints.
+// 将ingress rules转化为NGINX
+// data就是ings
 func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ingress.Backend {
 	upstreams := make(map[string]*ingress.Backend)
 	upstreams[defUpstreamName] = ic.getDefaultUpstream()
@@ -801,6 +808,7 @@ func (ic *GenericController) createUpstreams(data []interface{}) map[string]*ing
 
 // serviceEndpoints returns the upstream servers (endpoints) associated
 // to a service.
+// 获取某个service对应的endpoints
 func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 	hz *healthcheck.Upstream) ([]ingress.Endpoint, error) {
 	svcObj, svcExists, err := ic.svcLister.Indexer.GetByKey(svcKey)
@@ -841,6 +849,7 @@ func (ic *GenericController) serviceEndpoints(svcKey, backendPort string,
 // FDQN referenced by ingress rules and the common name field in the referenced
 // SSL certificates. Each server is configured with location / using a default
 // backend specified by the user or the one inside the ingress spec.
+
 func (ic *GenericController) createServers(data []interface{},
 	upstreams map[string]*ingress.Backend) map[string]*ingress.Server {
 	servers := make(map[string]*ingress.Server)
@@ -860,6 +869,7 @@ func (ic *GenericController) createServers(data []interface{},
 	var defaultPemFileName, defaultPemSHA string
 
 	// Tries to fetch the default Certificate. If it does not exists, generate a new self signed one.
+	// 获取默认签名，如果不存在则创建一个自签名
 	defaultCertificate, err := ic.getPemCertificate(ic.cfg.DefaultSSLCertificate)
 	if err != nil {
 		// This means the Default Secret does not exists, so we will create a new one.
@@ -887,6 +897,7 @@ func (ic *GenericController) createServers(data []interface{},
 	}
 
 	// initialize the default server
+	// 初始化默认server，即/
 	servers[defServerName] = &ingress.Server{
 		Hostname:       defServerName,
 		SSLCertificate: defaultPemFileName,
